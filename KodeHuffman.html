@@ -3,405 +3,243 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HolterECG Compress — Kompresi Sinyal Gelombang EKG (Delta + Huffman)</title>
-    <!-- Tailwind CSS CDN -->
+    <title>Delta–Huffman Codec — Editorial Flow</title>
+    <!-- Tailwind CSS CDN Only (Zero Custom CSS) -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Google Fonts: Inter & JetBrains Mono -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f8fafc;
+    <!-- Google Fonts: Fraunces, Plus Jakarta Sans & IBM Plex Mono -->
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=IBM+Plex+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        display: ['Fraunces', 'Georgia', 'serif'],
+                        sans: ['Plus Jakarta Sans', 'sans-serif'],
+                        mono: ['IBM Plex Mono', 'monospace'],
+                    },
+                    colors: {
+                        linen: '#F6F3EC',
+                        canvas: '#FDFBF7',
+                        coal: '#191A1D',
+                        cobalt: '#24478F',
+                        rust: '#B83A2D',
+                    }
+                }
+            }
         }
-        .font-mono-code {
-            font-family: 'JetBrains Mono', monospace;
-        }
-        /* Custom Scrollbar */
-        ::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
-        }
-        ::-webkit-scrollbar-track {
-            background: #f1f5f9;
-            border-radius: 4px;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #cbd5e1;
-            border-radius: 4px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #94a3b8;
-        }
-        /* SVG Node & Edge Transitions */
-        .tree-edge {
-            transition: stroke 0.25s ease, stroke-width 0.25s ease;
-        }
-        .tree-node circle {
-            transition: fill 0.25s ease, stroke 0.25s ease, r 0.25s ease;
-        }
-        @keyframes pulse-ring {
-            0% { transform: scale(0.95); opacity: 0.8; }
-            50% { transform: scale(1.05); opacity: 0.4; }
-            100% { transform: scale(0.95); opacity: 0.8; }
-        }
-        .live-dot {
-            animation: pulse-ring 2s infinite ease-in-out;
-        }
-    </style>
+    </script>
 </head>
-<body class="text-slate-800 antialiased selection:bg-teal-100 selection:text-teal-900">
+<body class="bg-linen text-coal font-sans antialiased selection:bg-cobalt selection:text-white min-h-screen flex flex-col">
 
-    <!-- Toast Notification Container (No alert()) -->
+    <!-- Toast Notification Container (Pure Tailwind) -->
     <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
 
-    <!-- Top Medical Telemetry Header -->
-    <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <div class="flex items-center gap-3">
-                <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-teal-600 to-emerald-600 flex items-center justify-center text-white shadow-md shadow-teal-600/20 shrink-0">
-                    <!-- ECG Waveform Icon -->
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 12h4l3-9 4 18 3-9h4" />
-                    </svg>
-                </div>
-                <div>
-                    <div class="flex flex-wrap items-center gap-2">
-                        <h1 class="text-lg sm:text-xl font-bold text-slate-900 tracking-tight">HolterECG Compress</h1>
-                        <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-teal-50 text-teal-700 border border-teal-200">
-                            <span class="w-1.5 h-1.5 rounded-full bg-teal-500 live-dot"></span>
-                            Delta + Huffman Real-World DSP
-                        </span>
-                    </div>
-                    <p class="text-xs sm:text-sm text-slate-500">Studi Kasus Dr. Aris: Kompresi Gelombang Voltase EKG (mV) Portabel 24 Jam</p>
-                </div>
+    <!-- Flowing Editorial Masthead (No Sticky Box) -->
+    <header class="max-w-6xl w-full mx-auto px-4 sm:px-8 pt-8 pb-6 border-b border-coal/20">
+        <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+            <div class="space-y-1.5">
+                <h1 class="font-display text-3xl sm:text-5xl font-bold tracking-tight text-coal">
+                    Delta &amp; Huffman
+                </h1>
             </div>
-            <div class="flex items-center gap-2 text-xs text-slate-600 bg-slate-100 px-3 py-2 rounded-xl border border-slate-200 self-start sm:self-auto">
-                <svg class="w-4 h-4 text-teal-600 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                </svg>
-                <span>Arsitektur: <strong>Delta Encoding &rarr; Huffman Tree</strong></span>
+            <p class="text-xs sm:text-sm text-stone-600 max-w-md leading-relaxed">
+                Mengubah deretan angka menjadi selisih beruntun, menyusun kode prefix Huffman, lalu mengembalikannya utuh ke nilai awal.
+            </p>
+        </div>
+
+        <!-- Inline Typographic Strip (No Cards, No Dividers-as-Boxes) -->
+        <div class="mt-6 pt-5 border-t border-dashed border-coal/20 flex flex-wrap items-baseline gap-x-8 gap-y-3 font-mono">
+            <div>
+                <span class="text-[11px] uppercase tracking-wider text-stone-500 block">Mentah (16-bit)</span>
+                <span id="metric-raw-bits" class="text-xl sm:text-2xl font-bold text-coal">240 bit</span>
+                <span class="text-xs text-stone-500 ml-1">(<span id="metric-raw-bytes">30.0</span> B)</span>
+            </div>
+            <div>
+                <span class="text-[11px] uppercase tracking-wider text-stone-500 block">Terkompresi</span>
+                <span id="metric-huff-bits" class="text-xl sm:text-2xl font-bold text-cobalt">37 bit</span>
+                <span class="text-xs text-stone-500 ml-1">(<span id="metric-huff-bytes">4.6</span> B)</span>
+                <span class="text-[11px] text-stone-500 ml-1.5">[16b + <span id="metric-stream-only" class="font-semibold text-coal">21</span>b]</span>
+            </div>
+            <div>
+                <span class="text-[11px] uppercase tracking-wider text-stone-500 block">Hemat Ruang</span>
+                <span id="metric-savings" class="text-xl sm:text-2xl font-bold text-rust">84.6%</span>
+                <span class="text-xs text-stone-500 ml-1">(<span id="metric-avg-bits" class="font-semibold text-coal">2.47</span> b/s &bull; <span id="bit-compression-ratio" class="font-semibold text-coal">6.5:1</span>)</span>
             </div>
         </div>
     </header>
 
-    <!-- Main Dashboard Content -->
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+    <!-- Main Flowing Timeline Layout (No Heavy Cards) -->
+    <main class="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-8 py-8 space-y-12">
 
-        <!-- Section 1: Storage & Efficiency Metrics Cards -->
-        <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <!-- Card 1: Raw ADC 16-bit Size -->
-            <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
-                <div class="flex items-center justify-between mb-2">
-                    <span class="text-xs font-semibold uppercase tracking-wider text-slate-500">Ukuran Mentah (16-Bit ADC)</span>
-                    <span class="p-1.5 rounded-lg bg-slate-100 text-slate-600">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4" />
-                        </svg>
-                    </span>
-                </div>
-                <div class="flex items-baseline gap-2">
-                    <span id="metric-raw-bits" class="text-2xl sm:text-3xl font-bold text-slate-900 font-mono-code">240</span>
-                    <span class="text-sm font-medium text-slate-500">bit (<span id="metric-raw-bytes">30.0</span> B)</span>
-                </div>
-                <p class="text-xs text-slate-400 mt-1.5">Standar sensor: 16 bit / sampel voltase</p>
-            </div>
+        <!-- STEP 1: Flowing Input to Delta Ribbon -->
+        <section class="relative pl-6 sm:pl-9 border-l-2 border-cobalt/40 space-y-5">
+            <span class="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-cobalt ring-4 ring-linen"></span>
 
-            <!-- Card 2: Compressed Delta + Huffman Size -->
-            <div class="bg-white rounded-2xl p-5 border border-teal-200 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
-                <div class="absolute top-0 right-0 w-16 h-16 bg-teal-50 rounded-bl-full -mr-4 -mt-4 pointer-events-none"></div>
-                <div class="flex items-center justify-between mb-2 relative">
-                    <span class="text-xs font-semibold uppercase tracking-wider text-teal-700">Delta + Huffman Bits</span>
-                    <span class="p-1.5 rounded-lg bg-teal-50 text-teal-600">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                        </svg>
-                    </span>
-                </div>
-                <div class="flex items-baseline gap-2 relative">
-                    <span id="metric-huff-bits" class="text-2xl sm:text-3xl font-bold text-teal-700 font-mono-code">37</span>
-                    <span class="text-sm font-medium text-teal-600">bit (<span id="metric-huff-bytes">4.6</span> B)</span>
-                </div>
-                <p class="text-xs text-slate-500 mt-1.5">16-bit Anchor + <span id="metric-stream-only" class="font-semibold text-teal-700">21</span>-bit Huffman</p>
-            </div>
-
-            <!-- Card 3: Compression Ratio -->
-            <div class="bg-white rounded-2xl p-5 border border-emerald-200 shadow-sm hover:shadow-md transition-shadow">
-                <div class="flex items-center justify-between mb-2">
-                    <span class="text-xs font-semibold uppercase tracking-wider text-emerald-700">Efisiensi Kompresi</span>
-                    <span class="p-1.5 rounded-lg bg-emerald-50 text-emerald-600">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-                        </svg>
-                    </span>
-                </div>
-                <div class="flex items-baseline gap-2">
-                    <span id="metric-savings" class="text-2xl sm:text-3xl font-bold text-emerald-600 font-mono-code">84.6%</span>
-                    <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">Hemat Ruang</span>
-                </div>
-                <p class="text-xs text-slate-500 mt-1.5">Rata-rata <span id="metric-avg-bits" class="font-semibold text-slate-700">2.47</span> bit/sampel (vs 16 bit)</p>
-            </div>
-
-            <!-- Card 4: Holter Monitoring Duration Estimate -->
-            <div class="bg-gradient-to-br from-slate-800 to-slate-900 text-white rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow">
-                <div class="flex items-center justify-between mb-2">
-                    <span class="text-xs font-semibold uppercase tracking-wider text-teal-300">Kapasitas Rekam Alat</span>
-                    <span class="p-1.5 rounded-lg bg-white/10 text-teal-300">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                    </span>
-                </div>
-                <div class="flex items-baseline gap-2">
-                    <span id="metric-duration" class="text-2xl sm:text-3xl font-bold text-white font-mono-code">24.0</span>
-                    <span class="text-sm font-medium text-teal-300">Jam</span>
-                </div>
-                <p id="metric-duration-note" class="text-xs text-emerald-300 mt-1.5">Target 24 jam terpenuhi (vs 6.0 jam mentah)</p>
-            </div>
-        </section>
-
-        <!-- Section 2: Interactive ECG Waveform Monitor & Signal Controls -->
-        <section class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
-            <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3 mb-4">
+            <div class="flex flex-wrap items-baseline justify-between gap-2">
                 <div>
-                    <div class="flex items-center gap-2">
-                        <span class="w-2 h-5 rounded-full bg-teal-600"></span>
-                        <h2 class="text-base font-bold text-slate-900">Monitor Gelombang Elektroda Jantung (ECG Waveform mV)</h2>
-                    </div>
-                    <p class="text-xs text-slate-500 mt-0.5">Visualisasi sinyal voltase listrik otot jantung asli sebelum dan sesudah proses rekonstruksi server rumah sakit.</p>
+                    <span class="font-mono text-xs font-bold uppercase tracking-widest text-cobalt">Langkah 01</span>
+                    <h2 class="font-display text-2xl font-bold text-coal">Deretan Angka &amp; Selisih Delta</h2>
                 </div>
-
-                <!-- Waveform Preset Buttons -->
-                <div class="flex flex-wrap items-center gap-2">
-                    <button type="button" onclick="applyECGPreset('baseline')" class="px-3 py-1.5 text-xs font-medium rounded-lg bg-slate-100 hover:bg-teal-50 text-slate-700 hover:text-teal-700 border border-slate-200 hover:border-teal-300 transition-colors">
-                        Sampel Standar (15 Titik)
-                    </button>
-                    <button type="button" onclick="applyECGPreset('sinus')" class="px-3 py-1.5 text-xs font-medium rounded-lg bg-slate-100 hover:bg-teal-50 text-slate-700 hover:text-teal-700 border border-slate-200 hover:border-teal-300 transition-colors">
-                        Normal Sinus Rhythm (P-QRS-T)
-                    </button>
-                    <button type="button" onclick="applyECGPreset('pvc')" class="px-3 py-1.5 text-xs font-medium rounded-lg bg-slate-100 hover:bg-amber-50 text-slate-700 hover:text-amber-700 border border-slate-200 hover:border-amber-300 transition-colors">
-                        Gelombang Aritmia (PVC Spike)
-                    </button>
-                    <button type="button" onclick="injectLiveHeartbeat()" class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-teal-600 hover:bg-teal-700 text-white shadow-sm flex items-center gap-1.5 transition-colors">
-                        <span class="w-1.5 h-1.5 rounded-full bg-white animate-ping"></span>
-                        Rekam +1 Siklus Detak
-                    </button>
-                </div>
+                <span id="sample-count-badge" class="font-mono text-xs text-stone-600">15 Sampel</span>
             </div>
 
-            <!-- Interactive ECG Canvas -->
-            <div class="relative w-full h-56 sm:h-64 rounded-xl bg-slate-950 border border-slate-800 overflow-hidden shadow-inner">
-                <canvas id="ecg-canvas" class="w-full h-full block"></canvas>
-                <!-- Overlay Telemetry Legend -->
-                <div class="absolute top-3 left-3 flex flex-wrap items-center gap-3 bg-slate-900/85 backdrop-blur-sm px-3 py-1.5 rounded-lg border border-slate-800 text-[11px] font-mono-code">
-                    <span class="flex items-center gap-1.5 text-emerald-400">
-                        <span class="w-2.5 h-0.5 bg-emerald-400"></span> Sinyal Asli Sensor (mV)
-                    </span>
-                    <span id="canvas-reconstructed-legend" class="hidden flex items-center gap-1.5 text-amber-300">
-                        <span class="w-2 h-2 rounded-full border border-amber-300"></span> Titik Pulih Server (100% Match)
-                    </span>
-                </div>
-                <div id="canvas-hover-tooltip" class="hidden absolute top-3 right-3 bg-slate-900/90 text-teal-300 border border-teal-500/30 px-3 py-1.5 rounded-lg text-xs font-mono-code shadow-lg">
-                    t=0 | 1.20 mV
-                </div>
-            </div>
-
-            <!-- Step 1: Raw Voltage Samples vs Delta Encoding Transformation -->
-            <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 mt-5 pt-5 border-t border-slate-100">
-                <!-- Raw Voltage Input -->
-                <div class="lg:col-span-6 space-y-2">
-                    <div class="flex items-center justify-between">
-                        <label for="ecg-voltage-input" class="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
-                            <span class="px-1.5 py-0.5 rounded bg-slate-200 text-slate-800 font-mono-code">TAHAP 1A</span>
-                            Sampel Voltase Mentah (mV)
-                        </label>
-                        <span id="sample-count-badge" class="text-xs font-mono-code font-semibold text-slate-500">15 Sampel</span>
-                    </div>
-                    <textarea id="ecg-voltage-input" rows="2" class="w-full p-3 rounded-xl border border-slate-300 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 font-mono-code text-xs sm:text-sm text-slate-800 bg-slate-50/70 transition-all" placeholder="1.20, 1.20, 1.21, 1.20...">1.20, 1.20, 1.21, 1.20, 1.20, 1.20, 1.20, 1.25, 1.45, 1.20, 1.20, 1.20, 1.21, 1.20, 1.20</textarea>
-                    <div class="flex justify-end">
-                        <button type="button" onclick="processECGPipeline()" class="px-4 py-2 rounded-xl bg-teal-600 hover:bg-teal-700 text-white text-xs font-semibold shadow-sm shadow-teal-600/20 flex items-center gap-1.5 transition-all">
-                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                            </svg>
-                            Proses Delta + Kompresi Huffman
-                        </button>
-                    </div>
+            <div class="space-y-3">
+                <div class="flex flex-wrap items-center justify-between gap-2">
+                    <label for="ecg-voltage-input" class="font-mono text-xs uppercase tracking-wider text-stone-600">
+                        Input Sampel Angka
+                    </label>
+                    <button type="button" onclick="applyECGPreset('baseline')" class="font-mono text-xs text-cobalt underline underline-offset-4 hover:text-coal transition-colors">
+                        Isi Sampel Bawaan
+                    </button>
                 </div>
 
-                <!-- Delta Encoding Output Display -->
-                <div class="lg:col-span-6 space-y-2">
-                    <div class="flex items-center justify-between">
-                        <span class="text-xs font-bold uppercase tracking-wider text-teal-700 flex items-center gap-1.5">
-                            <span class="px-1.5 py-0.5 rounded bg-teal-100 text-teal-800 font-mono-code">TAHAP 1B</span>
-                            Transformasi Delta Encoding (Selisih &Delta;mV)
-                        </span>
-                        <span class="text-xs font-mono-code text-teal-700 font-semibold">Anchor: <span id="delta-anchor-val">1.20 mV</span></span>
-                    </div>
-                    <div id="delta-chips-container" class="p-3 rounded-xl bg-slate-50 border border-slate-200 min-h-[76px] max-h-28 overflow-y-auto flex flex-wrap gap-1.5 items-center">
-                        <!-- Delta chips injected via JS -->
-                    </div>
-                    <p class="text-[11px] text-slate-500">
-                        Selisih <code class="px-1 py-0.5 bg-teal-50 text-teal-700 rounded font-semibold">0.00</code> mendominasi karena sinyal stabil, sehingga Huffman dapat memberinya bit terpendek!
+                <textarea id="ecg-voltage-input" rows="2" class="w-full py-2.5 px-3.5 bg-canvas/80 border-b-2 border-coal/30 focus:border-cobalt focus:outline-none font-mono text-xs sm:text-sm text-coal" placeholder="1.20, 1.20, 1.21, 1.20...">1.20, 1.20, 1.21, 1.20, 1.20, 1.20, 1.20, 1.25, 1.45, 1.20, 1.20, 1.20, 1.21, 1.20, 1.20</textarea>
+
+                <div class="flex flex-wrap items-center justify-between gap-3 pt-1">
+                    <p class="font-mono text-xs text-stone-600">
+                        Nilai Awal (Anchor): <strong id="delta-anchor-val" class="text-coal underline decoration-cobalt/50 underline-offset-4">1.20 mV</strong>
                     </p>
+                    <button type="button" onclick="processECGPipeline()" class="px-5 py-2 rounded-full bg-coal hover:bg-cobalt text-canvas font-mono text-xs font-semibold uppercase tracking-wider transition-colors">
+                        Hitung Delta &amp; Huffman
+                    </button>
+                </div>
+            </div>
+
+            <!-- Flowing Delta Stream (Underline Strip, Not a Box) -->
+            <div class="pt-4 border-t border-coal/15 space-y-2.5">
+                <div class="flex items-center justify-between font-mono text-xs text-stone-500">
+                    <span>Hasil Selisih Beruntun (&Delta;)</span>
+                    <span>n - 1 langkah</span>
+                </div>
+                <div id="delta-chips-container" class="flex flex-wrap gap-2">
+                    <!-- Delta tokens injected via JS -->
                 </div>
             </div>
         </section>
 
-        <!-- Section 3: Step 2 - Interactive Huffman Tree & Frequency Dictionary -->
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <!-- STEP 2: Open Editorial Split for Codebook & Tree -->
+        <section class="relative pl-6 sm:pl-9 border-l-2 border-cobalt/40 space-y-6">
+            <span class="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-linen border-2 border-cobalt ring-4 ring-linen"></span>
 
-            <!-- Left: Frequency & Huffman Dictionary Table (5 cols) -->
-            <div class="lg:col-span-5">
-                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 h-full flex flex-col">
-                    <div class="flex items-center justify-between mb-3">
-                        <div>
-                            <div class="flex items-center gap-2">
-                                <span class="px-1.5 py-0.5 rounded bg-sky-100 text-sky-800 font-mono-code text-[11px] font-bold">TAHAP 2A</span>
-                                <h2 class="text-base font-bold text-slate-900">Kamus Bit Selisih (&Delta;mV)</h2>
-                            </div>
-                            <p class="text-xs text-slate-500 mt-0.5">Pengkodean <em>prefix-free</em> berdasarkan frekuensi selisih.</p>
-                        </div>
-                    </div>
-
-                    <div class="overflow-x-auto flex-1">
-                        <table class="w-full text-left border-collapse">
-                            <thead>
-                                <tr class="border-b border-slate-200 text-[11px] font-semibold uppercase tracking-wider text-slate-500 bg-slate-50/70">
-                                    <th class="py-2.5 px-3 rounded-tl-lg">Simbol &Delta;</th>
-                                    <th class="py-2.5 px-3">Kategori Sinyal</th>
-                                    <th class="py-2.5 px-3 text-center">Frek</th>
-                                    <th class="py-2.5 px-3">Kode Bit</th>
-                                    <th class="py-2.5 px-3 text-right rounded-tr-lg">Ukuran</th>
-                                </tr>
-                            </thead>
-                            <tbody id="dictionary-tbody" class="divide-y divide-slate-100 text-sm">
-                                <!-- Rows injected via JS -->
-                            </tbody>
-                        </table>
-                    </div>
+            <div class="flex flex-wrap items-end justify-between gap-2">
+                <div>
+                    <span class="font-mono text-xs font-bold uppercase tracking-widest text-cobalt">Langkah 02</span>
+                    <h2 class="font-display text-2xl font-bold text-coal">Kamus Kode &amp; Pohon Huffman</h2>
                 </div>
+                <p class="font-mono text-xs text-stone-500">
+                    Frekuensi sama &rarr; angka terkecil duluan &bull; Arahkan kursor untuk menyorot jalur
+                </p>
             </div>
 
-            <!-- Right: Interactive Huffman Binary Tree SVG (7 cols) -->
-            <div class="lg:col-span-7">
-                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 h-full flex flex-col">
-                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
-                        <div>
-                            <div class="flex items-center gap-2">
-                                <span class="px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 font-mono-code text-[11px] font-bold">TAHAP 2B</span>
-                                <h2 class="text-base font-bold text-slate-900">Pohon Biner Huffman (Greedy Bottom-Up)</h2>
-                            </div>
-                            <p class="text-xs text-slate-500 mt-0.5">Arahkan kursor ke simpul daun untuk melihat rute jalur bit dari Root.</p>
-                        </div>
-                        <div class="flex items-center gap-3 text-xs font-medium">
-                            <span class="flex items-center gap-1.5 text-slate-600">
-                                <span class="w-3 h-3 rounded-full bg-slate-100 border-2 border-slate-400"></span> Internal
-                            </span>
-                            <span class="flex items-center gap-1.5 text-teal-700">
-                                <span class="w-3 h-3 rounded-full bg-teal-100 border-2 border-teal-600"></span> Daun (&Delta;mV)
-                            </span>
-                        </div>
-                    </div>
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                <!-- Left: Clean Typographic Frequency Table (5 cols) -->
+                <div class="lg:col-span-5 overflow-x-auto">
+                    <table class="w-full text-left border-collapse font-mono text-xs">
+                        <thead>
+                            <tr class="border-b-2 border-coal text-[11px] uppercase tracking-wider text-stone-500">
+                                <th class="py-2 pr-3">Delta</th>
+                                <th class="py-2 px-2 text-center">Frek</th>
+                                <th class="py-2 px-3">Kode Bit</th>
+                                <th class="py-2 pl-2 text-right">Panjang</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dictionary-tbody" class="divide-y divide-coal/15">
+                            <!-- Rows injected via JS -->
+                        </tbody>
+                    </table>
+                </div>
 
-                    <div id="tree-container" class="relative flex-1 min-h-[300px] bg-slate-50/80 rounded-xl border border-slate-200/90 overflow-auto flex items-center justify-center p-2">
-                        <svg id="huffman-svg" class="w-full h-full min-h-[280px]" preserveAspectRatio="xMidYMid meet"></svg>
-                        <div id="tree-hover-badge" class="hidden absolute bottom-3 left-3 bg-slate-900/90 text-white text-xs px-3 py-1.5 rounded-lg font-mono-code shadow-md backdrop-blur-sm">
-                            Jalur: -
+                <!-- Right: Unboxed Tree Canvas Area (7 cols) -->
+                <div class="lg:col-span-7 relative">
+                    <div class="flex items-center justify-between font-mono text-[11px] text-stone-500 pb-2 border-b border-coal/15">
+                        <span>Pohon Biner (Kiri = 0 &bull; Kanan = 1)</span>
+                        <span>Daun = Simbol &Delta;</span>
+                    </div>
+                    <div id="tree-container" class="relative min-h-[300px] pt-3 overflow-x-auto flex items-center justify-center">
+                        <svg id="huffman-svg" class="w-full h-full min-h-[270px]" preserveAspectRatio="xMidYMid meet"></svg>
+                        <div id="tree-hover-badge" class="hidden absolute bottom-2 left-0 bg-coal text-canvas text-xs px-3 py-1 rounded-full font-mono">
+                            Rute: -
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
+        </section>
 
-        <!-- Section 4: Step 3 - Compressed Bitstream & Hospital Server Lossless Reconstruction -->
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <!-- STEP 3: Bitstream Stream & Lossless Reconstruction -->
+        <section class="relative pl-6 sm:pl-9 border-l-2 border-rust/50 space-y-6">
+            <span class="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-rust ring-4 ring-linen"></span>
 
-            <!-- Left: Compressed Binary Packet (6 cols) -->
-            <div class="lg:col-span-6">
-                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 h-full flex flex-col justify-between">
-                    <div>
-                        <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
-                            <div>
-                                <div class="flex items-center gap-2">
-                                    <span class="px-1.5 py-0.5 rounded bg-teal-100 text-teal-800 font-mono-code text-[11px] font-bold">TAHAP 3</span>
-                                    <h2 class="text-base font-bold text-slate-900">Paket Bitstream Flash Memory</h2>
-                                </div>
-                                <p class="text-xs text-slate-500 mt-0.5">Paket biner siap simpan ke EEPROM perangkat Holter.</p>
-                            </div>
-                            <div class="flex items-center gap-2">
-                                <label class="inline-flex items-center gap-1.5 text-xs text-slate-600 cursor-pointer select-none bg-slate-100 px-2.5 py-1.5 rounded-lg hover:bg-slate-200/70 transition-colors">
-                                    <input type="checkbox" id="toggle-spaced-bits" onchange="renderBitstreamDisplay()" class="rounded text-teal-600 focus:ring-teal-500" checked>
-                                    <span>Pisah per Sampel</span>
-                                </label>
-                                <button type="button" onclick="copyBitstream()" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-900 text-white text-xs font-medium transition-colors">
-                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                                    </svg>
-                                    Salin Bit
-                                </button>
-                            </div>
-                        </div>
+            <div>
+                <span class="font-mono text-xs font-bold uppercase tracking-widest text-rust">Langkah 03</span>
+                <h2 class="font-display text-2xl font-bold text-coal">Aliran Bit &amp; Pengembalian Data</h2>
+            </div>
 
-                        <!-- Anchor Header + Huffman Stream -->
-                        <div class="p-3.5 rounded-xl bg-slate-900 text-teal-300 font-mono-code text-xs sm:text-sm leading-relaxed break-all max-h-40 overflow-y-auto border border-slate-800 shadow-inner space-y-2">
-                            <div class="flex items-center gap-2 pb-2 border-b border-slate-800 text-[11px]">
-                                <span class="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30 font-semibold">HEADER ANCHOR (16-bit)</span>
-                                <span id="anchor-binary-header" class="text-amber-200">1.20 mV</span>
-                            </div>
-                            <div id="bitstream-display"></div>
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                <!-- Left: Bitstream Flow (6 cols) -->
+                <div class="lg:col-span-6 space-y-3">
+                    <div class="flex flex-wrap items-center justify-between gap-2">
+                        <span class="font-mono text-xs uppercase tracking-wider text-stone-600">
+                            Bit Hasil Kompresi
+                        </span>
+                        <div class="flex items-center gap-3">
+                            <label class="inline-flex items-center gap-1.5 font-mono text-xs text-stone-700 cursor-pointer select-none">
+                                <input type="checkbox" id="toggle-spaced-bits" onchange="renderBitstreamDisplay()" class="accent-cobalt rounded" checked>
+                                <span>Jeda per Simbol</span>
+                            </label>
+                            <button type="button" onclick="copyBitstream()" class="px-3 py-1 rounded-full border border-coal/30 hover:border-cobalt hover:text-cobalt font-mono text-[11px] uppercase tracking-wider transition-colors">
+                                Salin
+                            </button>
                         </div>
                     </div>
 
-                    <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
-                        <span>Sifat Kode: <strong class="text-slate-700">Prefix-Free (Tanpa Delimiter)</strong></span>
-                        <span id="bit-compression-ratio" class="font-mono-code font-semibold text-teal-700">Rasio 6.5 : 1</span>
+                    <div class="pt-2 border-t border-coal/15 font-mono text-xs space-y-2.5">
+                        <div class="text-[11px] text-stone-600">
+                            <span class="font-bold text-coal">Header 16-bit:</span>
+                            <span id="anchor-binary-header">0000000001111000 (1.20 mV)</span>
+                        </div>
+                        <div id="bitstream-display" class="leading-relaxed break-all max-h-40 overflow-y-auto text-coal"></div>
+                    </div>
+                </div>
+
+                <!-- Right: Decompression & Check (6 cols) -->
+                <div class="lg:col-span-6 space-y-3">
+                    <div class="flex items-center justify-between">
+                        <span class="font-mono text-xs uppercase tracking-wider text-stone-600">
+                            Hasil Kembali ke Angka Asli
+                        </span>
+                        <span id="decompression-sample-check" class="font-mono text-[11px] text-stone-500">Belum Dijalankan</span>
+                    </div>
+
+                    <div class="pt-2 border-t border-coal/15 space-y-4">
+                        <div id="restored-ecg-text" class="font-mono text-xs text-stone-500 min-h-[76px] max-h-36 overflow-y-auto leading-relaxed">
+                            Klik tombol dekompresi untuk menelusuri bit menjadi Delta lalu menjumlahkannya dari nilai awal.
+                        </div>
+
+                        <div class="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-dashed border-coal/20">
+                            <div class="flex items-center gap-2 font-mono text-xs">
+                                <span id="verify-status-dot" class="w-2 h-2 rounded-full bg-stone-400 inline-block"></span>
+                                <span id="verify-status-title" class="uppercase tracking-wider text-stone-600 font-semibold">
+                                    Menunggu
+                                </span>
+                                <span id="lossless-badge" class="hidden px-2.5 py-0.5 rounded-full bg-cobalt text-white text-[10px] font-bold uppercase">
+                                    100% Sama
+                                </span>
+                            </div>
+
+                            <button type="button" onclick="verifyHospitalReconstruction()" class="px-4 py-2 rounded-full bg-rust hover:bg-coal text-white font-mono text-xs font-semibold uppercase tracking-wider transition-colors">
+                                Kembalikan Data
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
-
-            <!-- Right: Hospital Server Decompression & Waveform Reconstruction (6 cols) -->
-            <div class="lg:col-span-6">
-                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 h-full flex flex-col justify-between">
-                    <div>
-                        <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
-                            <div class="flex items-center gap-2">
-                                <span class="px-1.5 py-0.5 rounded bg-indigo-100 text-indigo-800 font-mono-code text-[11px] font-bold">TAHAP 4</span>
-                                <h2 class="text-base font-bold text-slate-900">Rekonstruksi Server Rumah Sakit</h2>
-                            </div>
-                            <span id="lossless-badge" class="hidden inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
-                                <svg class="w-3.5 h-3.5 text-emerald-600" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-                                </svg>
-                                100% IDENTIK (Lossless Verified)
-                            </span>
-                        </div>
-                        <p class="text-xs text-slate-500 mb-3">
-                            Server menerjemahkan deretan bit kembali menjadi nilai selisih (&Delta;mV), lalu menjumlahkannya ke titik Anchor untuk memulihkan grafik EKG asli secara utuh.
-                        </p>
-
-                        <div id="decompression-result-box" class="hidden p-3.5 rounded-xl bg-emerald-50/70 border border-emerald-200 space-y-2 mb-3">
-                            <div class="flex items-center justify-between text-xs">
-                                <span class="font-semibold text-emerald-900">Gelombang Voltase Pulih (mV):</span>
-                                <span id="decompression-sample-check" class="font-mono-code text-emerald-700 font-medium">15/15 Titik Presisi</span>
-                            </div>
-                            <div id="restored-ecg-text" class="p-2.5 rounded-lg bg-white border border-emerald-200/80 font-mono-code text-xs text-slate-800 break-all max-h-24 overflow-y-auto">
-                            </div>
-                        </div>
-                    </div>
-
-                    <button type="button" onclick="verifyHospitalReconstruction()" class="w-full py-2.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-semibold text-sm shadow-sm shadow-indigo-600/20 flex items-center justify-center gap-2 transition-all">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                        </svg>
-                        Dekompresi & Rekonstruksi Grafik EKG
-                    </button>
-                </div>
-            </div>
-        </div>
+        </section>
     </main>
 
-    <!-- Footer -->
-    <footer class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 text-center text-xs text-slate-400">
-        Simulasi Rekayasa Biomedis: Delta Encoding + Algoritma Kompresi Huffman untuk Sinyal Gelombang EKG 24 Jam
+    <!-- Minimalist Footer -->
+    <footer class="max-w-6xl w-full mx-auto px-4 sm:px-8 py-6 border-t border-coal/15 flex flex-col sm:flex-row items-center justify-between gap-2 font-mono text-[11px] text-stone-500">
+        <span>Delta Encoding &rarr; Huffman Coding &rarr; Rekonstruksi</span>
+        <span>Tailwind CSS Only</span>
     </footer>
 
     <!-- Application Logic -->
@@ -412,11 +250,19 @@
         class HuffmanNode {
             constructor(symbol, freq, left = null, right = null) {
                 this.id = 'node_' + Math.random().toString(36).substr(2, 9);
-                this.symbol = symbol; // Delta symbol string (e.g. "0.00", "+0.01") or null
+                this.symbol = symbol; // Simbol delta string (mis. "0.00", "+0.01", "-0.02") atau null
                 this.freq = freq;
                 this.left = left;
                 this.right = right;
-                this.sortKey = symbol !== null ? symbol : (left && right ? (left.sortKey < right.sortKey ? left.sortKey : right.sortKey) : '');
+
+                // Nilai numerik terkecil untuk tie-breaker saat frekuensi sama
+                if (symbol !== null) {
+                    this.numericKey = parseFloat(symbol);
+                } else {
+                    const leftKey = left ? left.numericKey : Infinity;
+                    const rightKey = right ? right.numericKey : Infinity;
+                    this.numericKey = Math.min(leftKey, rightKey);
+                }
             }
 
             isLeaf() {
@@ -433,8 +279,7 @@
             frequencies: {},
             encodedArray: [],
             encodedRaw: "",
-            reconstructedSamples: null,
-            hoveredIndex: -1
+            reconstructedSamples: null
         };
 
         // ==========================================
@@ -467,7 +312,8 @@
                 freqs[sym] = (freqs[sym] || 0) + 1;
             }
 
-            const uniqueSymbols = Object.keys(freqs).sort((a, b) => a.localeCompare(b));
+            // Urutkan simbol awal berdasarkan nilai angka terkecil
+            const uniqueSymbols = Object.keys(freqs).sort((a, b) => parseFloat(a) - parseFloat(b));
             let nodes = uniqueSymbols.map(sym => new HuffmanNode(sym, freqs[sym]));
 
             if (nodes.length === 0) return { root: null, freqs };
@@ -480,7 +326,8 @@
             while (nodes.length > 1) {
                 nodes.sort((a, b) => {
                     if (a.freq !== b.freq) return a.freq - b.freq;
-                    return a.sortKey.localeCompare(b.sortKey);
+                    if (a.numericKey !== b.numericKey) return a.numericKey - b.numericKey;
+                    return 0;
                 });
 
                 const left = nodes.shift();
@@ -503,12 +350,11 @@
             return codes;
         }
 
-        function classifyDeltaSymbol(sym) {
-            const val = Math.abs(parseFloat(sym));
-            if (val === 0) return { label: 'Baseline Stabil', badge: 'bg-teal-100 text-teal-800 border-teal-200' };
-            if (val <= 0.03) return { label: 'Fluktuasi Mikro', badge: 'bg-sky-100 text-sky-800 border-sky-200' };
-            if (val <= 0.15) return { label: 'Gelombang P / T', badge: 'bg-amber-100 text-amber-800 border-amber-200' };
-            return { label: 'Puncak QRS / Aritmia', badge: 'bg-rose-100 text-rose-800 border-rose-200' };
+        function getDeltaBadgeStyle(sym) {
+            const val = parseFloat(sym);
+            if (val === 0) return 'bg-canvas text-coal border-coal/30';
+            if (val > 0) return 'bg-amber-50 text-amber-900 border-amber-700/30';
+            return 'bg-red-50 text-rust border-rust/30';
         }
 
         function processECGPipeline() {
@@ -516,7 +362,7 @@
             const samples = parseVoltageInput(rawStr);
 
             if (samples.length < 2) {
-                showToast("Masukkan minimal 2 sampel voltase (mV) untuk menghitung selisih Delta!", "warning");
+                showToast("Masukkan minimal 2 sampel angka untuk menghitung selisih Delta!", "warning");
                 return;
             }
 
@@ -536,62 +382,59 @@
                 frequencies: freqs,
                 encodedArray,
                 encodedRaw,
-                reconstructedSamples: null,
-                hoveredIndex: -1
+                reconstructedSamples: null
             };
 
-            // Reset verification UI
-            document.getElementById('decompression-result-box').classList.add('hidden');
-            document.getElementById('lossless-badge').classList.add('hidden');
-            document.getElementById('canvas-reconstructed-legend').classList.add('hidden');
-
-            // Render all panels
+            resetVerificationUI();
             updateMetricsCards();
             renderDeltaChips();
             renderDictionaryTable();
             renderBitstreamDisplay();
             renderHuffmanTreeSVG();
-            drawECGCanvas();
+        }
+
+        function resetVerificationUI() {
+            const dotEl = document.getElementById('verify-status-dot');
+            const titleEl = document.getElementById('verify-status-title');
+            const badgeEl = document.getElementById('lossless-badge');
+            const restoredEl = document.getElementById('restored-ecg-text');
+            const checkEl = document.getElementById('decompression-sample-check');
+
+            dotEl.className = "w-2 h-2 rounded-full bg-stone-400 inline-block";
+            titleEl.textContent = "Menunggu";
+            titleEl.className = "uppercase tracking-wider text-stone-600 font-semibold";
+            badgeEl.classList.add('hidden');
+            checkEl.textContent = "Belum Dijalankan";
+            checkEl.className = "font-mono text-[11px] text-stone-500";
+            restoredEl.className = "font-mono text-xs text-stone-500 min-h-[76px] max-h-36 overflow-y-auto leading-relaxed";
+            restoredEl.textContent = "Klik tombol dekompresi untuk menelusuri bit menjadi Delta lalu menjumlahkannya dari nilai awal.";
         }
 
         // ==========================================
-        // 3. UI METRICS & DELTA CHIPS RENDERING
+        // 3. UI METRICS & DELTA TOKENS RENDERING
         // ==========================================
         function updateMetricsCards() {
             const n = pipelineState.rawSamples.length;
-            const rawBits = n * 16; // 16-bit ADC per voltage sample
+            const rawBits = n * 16;
             const streamBits = pipelineState.encodedRaw.length;
-            const totalCompressedBits = 16 + streamBits; // 16-bit Anchor + Huffman stream
+            const totalCompressedBits = 16 + streamBits;
 
             const savedBits = Math.max(0, rawBits - totalCompressedBits);
             const savingsPct = rawBits > 0 ? ((savedBits / rawBits) * 100) : 0;
             const avgBitsPerSample = n > 0 ? (totalCompressedBits / n) : 0;
             const ratio = totalCompressedBits > 0 ? (rawBits / totalCompressedBits) : 1;
 
-            // 6 hours baseline capacity scaled by compression ratio
-            const extendedHours = Math.min(48, 6 * ratio).toFixed(1);
-
             document.getElementById('sample-count-badge').textContent = `${n} Sampel`;
-            document.getElementById('metric-raw-bits').textContent = rawBits;
+            document.getElementById('metric-raw-bits').textContent = `${rawBits} bit`;
             document.getElementById('metric-raw-bytes').textContent = (rawBits / 8).toFixed(1);
 
-            document.getElementById('metric-huff-bits').textContent = totalCompressedBits;
+            document.getElementById('metric-huff-bits').textContent = `${totalCompressedBits} bit`;
             document.getElementById('metric-huff-bytes').textContent = (totalCompressedBits / 8).toFixed(1);
             document.getElementById('metric-stream-only').textContent = streamBits;
 
             document.getElementById('metric-savings').textContent = `${savingsPct.toFixed(1)}%`;
             document.getElementById('metric-avg-bits').textContent = avgBitsPerSample.toFixed(2);
-            document.getElementById('bit-compression-ratio').textContent = `Rasio ${ratio.toFixed(1)} : 1`;
-
-            document.getElementById('metric-duration').textContent = extendedHours;
-            const noteEl = document.getElementById('metric-duration-note');
-            if (parseFloat(extendedHours) >= 24.0) {
-                noteEl.textContent = "Target 24 jam terpenuhi (vs 6.0 jam mentah)";
-                noteEl.className = "text-xs text-emerald-300 mt-1.5";
-            } else {
-                noteEl.textContent = `Meningkat dari 6.0 jam (target 24 jam)`;
-                noteEl.className = "text-xs text-amber-300 mt-1.5";
-            }
+            document.getElementById('bit-compression-ratio').textContent = `${ratio.toFixed(1)}:1`;
         }
 
         function renderDeltaChips() {
@@ -600,9 +443,9 @@
             container.innerHTML = '';
 
             pipelineState.deltas.forEach((sym, idx) => {
-                const info = classifyDeltaSymbol(sym);
+                const badgeStyle = getDeltaBadgeStyle(sym);
                 const chip = document.createElement('span');
-                chip.className = `px-2 py-1 rounded-lg font-mono-code text-xs font-semibold border ${info.badge} cursor-default transition-transform hover:scale-105`;
+                chip.className = `px-2.5 py-1 rounded-full border font-mono text-xs font-semibold ${badgeStyle}`;
                 chip.title = `Sampel #${idx + 1} → #${idx + 2}: Selisih ${sym} mV`;
                 chip.textContent = sym;
                 container.appendChild(chip);
@@ -615,39 +458,35 @@
 
             const symbols = Object.keys(pipelineState.frequencies).sort((a, b) => {
                 const diff = pipelineState.frequencies[b] - pipelineState.frequencies[a];
-                return diff !== 0 ? diff : a.localeCompare(b);
+                return diff !== 0 ? diff : parseFloat(a) - parseFloat(b);
             });
-
-            const totalDeltas = pipelineState.deltas.length;
 
             symbols.forEach(sym => {
                 const freq = pipelineState.frequencies[sym];
                 const code = pipelineState.codes[sym];
-                const pct = ((freq / totalDeltas) * 100).toFixed(0);
-                const info = classifyDeltaSymbol(sym);
+                const badgeStyle = getDeltaBadgeStyle(sym);
 
                 const tr = document.createElement('tr');
-                tr.className = "hover:bg-slate-50/90 transition-colors cursor-pointer";
+                tr.className = "hover:bg-canvas/90 transition-colors cursor-pointer";
                 tr.onmouseenter = () => highlightTreePath(sym, code);
                 tr.onmouseleave = () => resetTreeHighlight();
 
                 tr.innerHTML = `
-                    <td class="py-2.5 px-3">
-                        <span class="inline-block px-2 py-1 rounded-lg font-mono-code font-bold text-xs border ${info.badge}">
+                    <td class="py-2 pr-3">
+                        <span class="inline-block px-2 py-0.5 rounded-full font-bold border ${badgeStyle}">
                             ${sym}
                         </span>
                     </td>
-                    <td class="py-2.5 px-3 text-xs font-medium text-slate-700">${info.label}</td>
-                    <td class="py-2.5 px-3 text-center font-mono-code text-xs text-slate-600">
-                        <span class="font-bold text-slate-800">${freq}x</span> <span class="text-slate-400">(${pct}%)</span>
+                    <td class="py-2 px-2 text-center text-coal font-semibold">
+                        ${freq}
                     </td>
-                    <td class="py-2.5 px-3">
-                        <span class="px-2 py-1 rounded bg-teal-50 border border-teal-200 text-teal-800 font-mono-code font-bold text-xs tracking-wider">
+                    <td class="py-2 px-3">
+                        <span class="px-2 py-0.5 bg-canvas border border-coal/25 text-coal font-bold tracking-wider">
                             ${code}
                         </span>
                     </td>
-                    <td class="py-2.5 px-3 text-right font-mono-code text-xs font-semibold text-slate-600">
-                        ${code.length} bit
+                    <td class="py-2 pl-2 text-right text-stone-600">
+                        ${code.length}b
                     </td>
                 `;
                 tbody.appendChild(tr);
@@ -659,14 +498,13 @@
             const anchorHeaderEl = document.getElementById('anchor-binary-header');
             const isSpaced = document.getElementById('toggle-spaced-bits').checked;
 
-            // Show simulated 16-bit integer representation of Anchor (e.g., mV * 100)
             const scaledInt = Math.max(0, Math.round(pipelineState.anchorValue * 100));
             const anchorBin16 = scaledInt.toString(2).padStart(16, '0');
             anchorHeaderEl.textContent = `${anchorBin16} (${pipelineState.anchorValue.toFixed(2)} mV)`;
 
             if (isSpaced) {
                 displayEl.innerHTML = pipelineState.encodedArray
-                    .map((bits, idx) => `<span title="Delta[${idx}]: ${pipelineState.deltas[idx]}" class="inline-block px-1.5 py-0.5 mr-1 mb-1 rounded bg-slate-800 text-teal-300 border border-slate-700/80">${bits}</span>`)
+                    .map((bits, idx) => `<span title="Delta[${idx}]: ${pipelineState.deltas[idx]}" class="inline-block px-2 py-0.5 mr-1 mb-1 rounded-full bg-canvas text-coal border border-coal/20 hover:border-cobalt">${bits}</span>`)
                     .join('');
             } else {
                 displayEl.textContent = pipelineState.encodedRaw;
@@ -674,165 +512,7 @@
         }
 
         // ==========================================
-        // 4. INTERACTIVE ECG WAVEFORM CANVAS
-        // ==========================================
-        function drawECGCanvas() {
-            const canvas = document.getElementById('ecg-canvas');
-            const container = canvas.parentElement;
-            const dpr = window.devicePixelRatio || 1;
-            const rect = container.getBoundingClientRect();
-
-            canvas.width = rect.width * dpr;
-            canvas.height = rect.height * dpr;
-
-            const ctx = canvas.getContext('2d');
-            ctx.scale(dpr, dpr);
-
-            const w = rect.width;
-            const h = rect.height;
-
-            // Background Dark Medical Monitor Grid
-            ctx.fillStyle = '#020617';
-            ctx.fillRect(0, 0, w, h);
-
-            // Minor ECG Grid (10px)
-            ctx.strokeStyle = 'rgba(20, 184, 166, 0.08)';
-            ctx.lineWidth = 1;
-            for (let x = 0; x < w; x += 14) {
-                ctx.beginPath();
-                ctx.moveTo(x, 0);
-                ctx.lineTo(x, h);
-                ctx.stroke();
-            }
-            for (let y = 0; y < h; y += 14) {
-                ctx.beginPath();
-                ctx.moveTo(0, y);
-                ctx.lineTo(w, y);
-                ctx.stroke();
-            }
-
-            // Major ECG Grid (70px)
-            ctx.strokeStyle = 'rgba(20, 184, 166, 0.18)';
-            ctx.lineWidth = 1;
-            for (let x = 0; x < w; x += 70) {
-                ctx.beginPath();
-                ctx.moveTo(x, 0);
-                ctx.lineTo(x, h);
-                ctx.stroke();
-            }
-            for (let y = 0; y < h; y += 70) {
-                ctx.beginPath();
-                ctx.moveTo(0, y);
-                ctx.lineTo(w, y);
-                ctx.stroke();
-            }
-
-            const samples = pipelineState.rawSamples;
-            if (!samples || samples.length === 0) return;
-
-            const padLeft = 44;
-            const padRight = 24;
-            const padTop = 36;
-            const padBottom = 28;
-            const plotW = w - padLeft - padRight;
-            const plotH = h - padTop - padBottom;
-
-            const minVal = Math.min(...samples, 0.8);
-            const maxVal = Math.max(...samples, 1.8);
-            const range = Math.max(0.4, maxVal - minVal);
-
-            const getCoords = (idx, val) => {
-                const x = padLeft + (samples.length === 1 ? plotW / 2 : (idx / (samples.length - 1)) * plotW);
-                const y = padTop + plotH - ((val - minVal) / range) * plotH;
-                return { x, y };
-            };
-
-            // Y-axis mV scale labels
-            ctx.fillStyle = '#64748b';
-            ctx.font = '10px "JetBrains Mono", monospace';
-            ctx.textAlign = 'right';
-            ctx.fillText(`${maxVal.toFixed(2)}mV`, padLeft - 6, padTop + 8);
-            ctx.fillText(`${((maxVal + minVal) / 2).toFixed(2)}mV`, padLeft - 6, padTop + plotH / 2 + 3);
-            ctx.fillText(`${minVal.toFixed(2)}mV`, padLeft - 6, padTop + plotH);
-
-            // Glow effect for ECG Trace
-            ctx.save();
-            ctx.shadowColor = '#10b981';
-            ctx.shadowBlur = 8;
-            ctx.strokeStyle = '#34d399';
-            ctx.lineWidth = 2.4;
-            ctx.lineJoin = 'round';
-            ctx.lineCap = 'round';
-
-            ctx.beginPath();
-            samples.forEach((val, idx) => {
-                const { x, y } = getCoords(idx, val);
-                if (idx === 0) ctx.moveTo(x, y);
-                else ctx.lineTo(x, y);
-            });
-            ctx.stroke();
-            ctx.restore();
-
-            // Draw Sample Nodes
-            samples.forEach((val, idx) => {
-                const { x, y } = getCoords(idx, val);
-                const isHovered = idx === pipelineState.hoveredIndex;
-
-                ctx.beginPath();
-                ctx.arc(x, y, isHovered ? 5.5 : 3.2, 0, Math.PI * 2);
-                ctx.fillStyle = isHovered ? '#ffffff' : '#10b981';
-                ctx.fill();
-
-                // Draw Reconstructed overlay rings if verified
-                if (pipelineState.reconstructedSamples && pipelineState.reconstructedSamples[idx] !== undefined) {
-                    const recCoord = getCoords(idx, pipelineState.reconstructedSamples[idx]);
-                    ctx.beginPath();
-                    ctx.arc(recCoord.x, recCoord.y, 6.2, 0, Math.PI * 2);
-                    ctx.strokeStyle = '#fcd34d';
-                    ctx.lineWidth = 1.5;
-                    ctx.stroke();
-                }
-            });
-        }
-
-        // Canvas Hover Interaction
-        function setupCanvasHover() {
-            const canvas = document.getElementById('ecg-canvas');
-            const tooltip = document.getElementById('canvas-hover-tooltip');
-
-            canvas.addEventListener('mousemove', (e) => {
-                const samples = pipelineState.rawSamples;
-                if (!samples || samples.length === 0) return;
-
-                const rect = canvas.getBoundingClientRect();
-                const mouseX = e.clientX - rect.left;
-                const padLeft = 44;
-                const padRight = 24;
-                const plotW = rect.width - padLeft - padRight;
-
-                const ratio = Math.max(0, Math.min(1, (mouseX - padLeft) / plotW));
-                const idx = Math.round(ratio * (samples.length - 1));
-
-                if (idx !== pipelineState.hoveredIndex) {
-                    pipelineState.hoveredIndex = idx;
-                    drawECGCanvas();
-
-                    const val = samples[idx].toFixed(2);
-                    const deltaInfo = idx === 0 ? 'ANCHOR' : `Δ ${pipelineState.deltas[idx - 1]} (${pipelineState.codes[pipelineState.deltas[idx - 1]]})`;
-                    tooltip.textContent = `t=${idx}s | ${val} mV | ${deltaInfo}`;
-                    tooltip.classList.remove('hidden');
-                }
-            });
-
-            canvas.addEventListener('mouseleave', () => {
-                pipelineState.hoveredIndex = -1;
-                tooltip.classList.add('hidden');
-                drawECGCanvas();
-            });
-        }
-
-        // ==========================================
-        // 5. INTERACTIVE SVG HUFFMAN BINARY TREE
+        // 4. ARCHITECTURAL SVG HUFFMAN TREE
         // ==========================================
         function renderHuffmanTreeSVG() {
             const svg = document.getElementById('huffman-svg');
@@ -916,9 +596,9 @@
                 line.setAttribute("y1", edge.from.y);
                 line.setAttribute("x2", edge.to.x);
                 line.setAttribute("y2", edge.to.y);
-                line.setAttribute("stroke", "#cbd5e1");
-                line.setAttribute("stroke-width", "2.2");
-                line.setAttribute("class", "tree-edge");
+                line.setAttribute("stroke", "#a8a29e");
+                line.setAttribute("stroke-width", "1.75");
+                line.setAttribute("class", "tree-edge transition-all duration-200");
                 line.id = `edge_${edge.to.node.id}`;
 
                 const midX = (edge.from.x + edge.to.x) / 2 + (edge.bit === '0' ? -11 : 11);
@@ -930,8 +610,8 @@
                 bitBadge.setAttribute("width", "16");
                 bitBadge.setAttribute("height", "15");
                 bitBadge.setAttribute("rx", "4");
-                bitBadge.setAttribute("fill", edge.bit === '0' ? "#f1f5f9" : "#ecfdf5");
-                bitBadge.setAttribute("stroke", edge.bit === '0' ? "#cbd5e1" : "#a7f3d0");
+                bitBadge.setAttribute("fill", "#FDFBF7");
+                bitBadge.setAttribute("stroke", edge.bit === '0' ? "#24478F" : "#B83A2D");
                 bitBadge.setAttribute("stroke-width", "1");
 
                 const text = document.createElementNS(svgNS, "text");
@@ -940,8 +620,8 @@
                 text.setAttribute("text-anchor", "middle");
                 text.setAttribute("font-size", "10");
                 text.setAttribute("font-weight", "700");
-                text.setAttribute("font-family", "JetBrains Mono, monospace");
-                text.setAttribute("fill", edge.bit === '0' ? "#475569" : "#059669");
+                text.setAttribute("font-family", "IBM Plex Mono, monospace");
+                text.setAttribute("fill", edge.bit === '0' ? "#24478F" : "#B83A2D");
                 text.textContent = edge.bit;
 
                 gEdge.appendChild(line);
@@ -964,10 +644,11 @@
                 const circle = document.createElementNS(svgNS, "circle");
                 circle.setAttribute("cx", x);
                 circle.setAttribute("cy", y);
-                circle.setAttribute("r", isLeaf ? "24" : "18");
-                circle.setAttribute("fill", isLeaf ? "#ccfbf1" : "#ffffff");
-                circle.setAttribute("stroke", isLeaf ? "#0d9488" : "#94a3b8");
-                circle.setAttribute("stroke-width", isLeaf ? "2.5" : "2");
+                circle.setAttribute("r", isLeaf ? "23" : "16");
+                circle.setAttribute("fill", isLeaf ? "#FDFBF7" : "#F6F3EC");
+                circle.setAttribute("stroke", isLeaf ? "#B83A2D" : "#24478F");
+                circle.setAttribute("stroke-width", isLeaf ? "2.2" : "1.6");
+                circle.setAttribute("class", "transition-all duration-200");
 
                 gNode.appendChild(circle);
 
@@ -976,19 +657,20 @@
                     symText.setAttribute("x", x);
                     symText.setAttribute("y", y - 2);
                     symText.setAttribute("text-anchor", "middle");
-                    symText.setAttribute("font-size", "11");
+                    symText.setAttribute("font-size", "10.5");
                     symText.setAttribute("font-weight", "700");
-                    symText.setAttribute("font-family", "JetBrains Mono, monospace");
-                    symText.setAttribute("fill", "#0f766e");
+                    symText.setAttribute("font-family", "IBM Plex Mono, monospace");
+                    symText.setAttribute("fill", "#191A1D");
                     symText.textContent = node.symbol;
 
                     const freqText = document.createElementNS(svgNS, "text");
                     freqText.setAttribute("x", x);
-                    freqText.setAttribute("y", y + 11);
+                    freqText.setAttribute("y", y + 10);
                     freqText.setAttribute("text-anchor", "middle");
-                    freqText.setAttribute("font-size", "9.5");
+                    freqText.setAttribute("font-size", "9");
                     freqText.setAttribute("font-weight", "600");
-                    freqText.setAttribute("fill", "#115e59");
+                    freqText.setAttribute("font-family", "IBM Plex Mono, monospace");
+                    freqText.setAttribute("fill", "#B83A2D");
                     freqText.textContent = `(${node.freq})`;
 
                     gNode.appendChild(symText);
@@ -1001,10 +683,10 @@
                     freqText.setAttribute("x", x);
                     freqText.setAttribute("y", y + 4);
                     freqText.setAttribute("text-anchor", "middle");
-                    freqText.setAttribute("font-size", "11");
+                    freqText.setAttribute("font-size", "10.5");
                     freqText.setAttribute("font-weight", "700");
-                    freqText.setAttribute("font-family", "JetBrains Mono, monospace");
-                    freqText.setAttribute("fill", "#475569");
+                    freqText.setAttribute("font-family", "IBM Plex Mono, monospace");
+                    freqText.setAttribute("fill", "#24478F");
                     freqText.textContent = node.freq;
                     gNode.appendChild(freqText);
                 }
@@ -1022,11 +704,11 @@
             document.querySelectorAll('.tree-edge').forEach(edge => {
                 const toId = edge.id.replace('edge_', '');
                 if (ancestorIds.includes(toId)) {
-                    edge.setAttribute('stroke', '#0d9488');
-                    edge.setAttribute('stroke-width', '4');
+                    edge.setAttribute('stroke', '#24478F');
+                    edge.setAttribute('stroke-width', '3.2');
                 } else {
-                    edge.setAttribute('stroke', '#e2e8f0');
-                    edge.setAttribute('stroke-width', '1.8');
+                    edge.setAttribute('stroke', '#d6d3d1');
+                    edge.setAttribute('stroke-width', '1.2');
                 }
             });
 
@@ -1034,10 +716,11 @@
                 const rawId = nodeEl.id.replace('svg_', '');
                 const circle = nodeEl.querySelector('circle');
                 if (ancestorIds.includes(rawId)) {
-                    circle.setAttribute('stroke', '#0f766e');
-                    circle.setAttribute('stroke-width', '3.5');
+                    circle.setAttribute('stroke', '#24478F');
+                    circle.setAttribute('stroke-width', '3');
+                    circle.setAttribute('opacity', '1');
                 } else {
-                    circle.setAttribute('opacity', '0.45');
+                    circle.setAttribute('opacity', '0.35');
                 }
             });
 
@@ -1048,26 +731,28 @@
 
         function resetTreeHighlight() {
             document.querySelectorAll('.tree-edge').forEach(edge => {
-                edge.setAttribute('stroke', '#cbd5e1');
-                edge.setAttribute('stroke-width', '2.2');
+                edge.setAttribute('stroke', '#a8a29e');
+                edge.setAttribute('stroke-width', '1.75');
             });
             document.querySelectorAll('.tree-node').forEach(nodeEl => {
                 const isLeaf = nodeEl.dataset.symbol !== '';
                 const circle = nodeEl.querySelector('circle');
                 circle.setAttribute('opacity', '1');
-                circle.setAttribute('stroke', isLeaf ? '#0d9488' : '#94a3b8');
-                circle.setAttribute('stroke-width', isLeaf ? '2.5' : '2');
+                circle.setAttribute('stroke', isLeaf ? '#B83A2D' : '#24478F');
+                circle.setAttribute('stroke-width', isLeaf ? '2.2' : '1.6');
             });
             document.getElementById('tree-hover-badge').classList.add('hidden');
         }
 
+        // ==========================================
+        // 5. LOSSLESS RECONSTRUCTION & VERIFICATION
+        // ==========================================
         function verifyHospitalReconstruction() {
             if (!pipelineState.root || !pipelineState.encodedRaw) {
-                showToast("Belum ada paket bitstream terkompresi untuk direkonstruksi.", "warning");
+                showToast("Belum ada paket bit terkompresi untuk dikembalikan.", "warning");
                 return;
             }
 
-            // 1. Decode Huffman Bitstream back into Delta symbols
             const decodedDeltas = [];
             let curr = pipelineState.root;
 
@@ -1085,7 +770,6 @@
                 }
             }
 
-            // 2. Reconstruct original voltage array from Anchor + cumulative Deltas
             const reconstructed = [pipelineState.anchorValue];
             let runningVoltage = pipelineState.anchorValue;
 
@@ -1096,63 +780,48 @@
             }
 
             pipelineState.reconstructedSamples = reconstructed;
-            drawECGCanvas();
 
-            // Check 100% lossless equality
             const isExact = JSON.stringify(reconstructed) === JSON.stringify(pipelineState.rawSamples);
 
-            const resultBox = document.getElementById('decompression-result-box');
-            const badge = document.getElementById('lossless-badge');
-            const restoredText = document.getElementById('restored-ecg-text');
-            const sampleCheck = document.getElementById('decompression-sample-check');
-            const canvasLegend = document.getElementById('canvas-reconstructed-legend');
+            const dotEl = document.getElementById('verify-status-dot');
+            const titleEl = document.getElementById('verify-status-title');
+            const badgeEl = document.getElementById('lossless-badge');
+            const restoredEl = document.getElementById('restored-ecg-text');
+            const checkEl = document.getElementById('decompression-sample-check');
 
-            restoredText.textContent = reconstructed.map(v => v.toFixed(2)).join(', ');
-            sampleCheck.textContent = `${reconstructed.length}/${pipelineState.rawSamples.length} Titik Presisi`;
+            restoredEl.className = "font-mono text-xs text-coal min-h-[76px] max-h-36 overflow-y-auto leading-relaxed";
+            restoredEl.innerHTML = `<div class="flex flex-wrap gap-1.5">${reconstructed
+                .map(v => `<span class="px-2 py-0.5 rounded-full bg-canvas border border-coal/25 text-coal font-semibold">${v.toFixed(2)}</span>`)
+                .join('')}</div>`;
 
-            resultBox.classList.remove('hidden');
+            checkEl.textContent = `${reconstructed.length}/${pipelineState.rawSamples.length} Sampel Pulih`;
+            checkEl.className = "font-mono text-[11px] font-bold text-coal";
+
             if (isExact) {
-                badge.classList.remove('hidden');
-                canvasLegend.classList.remove('hidden');
-                showToast("Rekonstruksi server sukses! Grafik EKG pulih 100% identik (Lossless).", "success");
+                dotEl.className = "w-2 h-2 rounded-full bg-cobalt inline-block";
+                titleEl.textContent = "Terverifikasi Sama";
+                titleEl.className = "uppercase tracking-wider text-cobalt font-bold";
+                badgeEl.classList.remove('hidden');
+                showToast("Rekonstruksi berhasil: Data pulih 100% identik dengan input awal.", "success");
             } else {
-                badge.classList.add('hidden');
-                showToast("Peringatan: Ditemukan selisih rekonstruksi sinyal!", "warning");
+                dotEl.className = "w-2 h-2 rounded-full bg-rust inline-block";
+                titleEl.textContent = "Ada Selisih";
+                titleEl.className = "uppercase tracking-wider text-rust font-bold";
+                badgeEl.classList.add('hidden');
+                showToast("Peringatan: Ditemukan selisih rekonstruksi data.", "warning");
             }
         }
 
         // ==========================================
-        // 7. PRESETS & LIVE HEARTBEAT GENERATOR
+        // 6. PRESETS & CLIPBOARD UTILITIES
         // ==========================================
         function applyECGPreset(type) {
             const inputEl = document.getElementById('ecg-voltage-input');
             if (type === 'baseline') {
                 inputEl.value = "1.20, 1.20, 1.21, 1.20, 1.20, 1.20, 1.20, 1.25, 1.45, 1.20, 1.20, 1.20, 1.21, 1.20, 1.20";
-            } else if (type === 'sinus') {
-                // Realistic P-QRS-T cardiac cycles separated by stable baseline
-                const cycle = [1.20, 1.20, 1.20, 1.23, 1.20, 1.16, 1.68, 1.12, 1.20, 1.20, 1.26, 1.20, 1.20, 1.20];
-                const full = [...cycle, ...cycle];
-                inputEl.value = full.map(v => v.toFixed(2)).join(', ');
-            } else if (type === 'pvc') {
-                // Normal sinus followed by premature ventricular contraction spike
-                const pvcWave = [
-                    1.20, 1.20, 1.22, 1.20, 1.15, 1.65, 1.10, 1.20, 1.25, 1.20,
-                    1.20, 1.20, 1.05, 1.88, 0.96, 1.20, 1.20, 1.20, 1.20
-                ];
-                inputEl.value = pvcWave.map(v => v.toFixed(2)).join(', ');
             }
             processECGPipeline();
-            showToast("Preset gelombang EKG diterapkan & dikompresi.", "info");
-        }
-
-        function injectLiveHeartbeat() {
-            const inputEl = document.getElementById('ecg-voltage-input');
-            const existing = parseVoltageInput(inputEl.value);
-            const normalBeat = [1.20, 1.20, 1.20, 1.22, 1.20, 1.16, 1.66, 1.14, 1.20, 1.24, 1.20, 1.20];
-            const combined = [...existing, ...normalBeat];
-            inputEl.value = combined.map(v => v.toFixed(2)).join(', ');
-            processECGPipeline();
-            showToast("+1 siklus detak P-QRS-T ditambahkan & dipadatkan.", "success");
+            showToast("Sampel bawaan dimuat & diproses.", "info");
         }
 
         function copyBitstream() {
@@ -1163,30 +832,24 @@
             tempInput.select();
             document.execCommand("copy");
             document.body.removeChild(tempInput);
-            showToast("Deretan bit biner Huffman disalin ke clipboard!", "success");
+            showToast("Deretan bit biner Huffman disalin ke clipboard.", "success");
         }
 
         function showToast(message, type = "info") {
             const container = document.getElementById('toast-container');
             const toast = document.createElement('div');
-            const colors = {
-                success: "bg-slate-900 text-white border-l-4 border-emerald-400",
-                warning: "bg-slate-900 text-white border-l-4 border-amber-400",
-                info: "bg-slate-900 text-white border-l-4 border-teal-400"
-            };
-            toast.className = `${colors[type] || colors.info} px-4 py-3 rounded-xl shadow-lg text-xs font-medium flex items-center gap-2.5 transform transition-all duration-300 translate-y-2 opacity-0 pointer-events-auto max-w-sm`;
+            const accent = type === "warning" ? "border-l-4 border-l-rust" : "border-l-4 border-l-cobalt";
+            toast.className = `bg-coal text-canvas rounded-xl ${accent} px-4 py-3 text-xs font-mono flex items-center gap-2.5 transform transition-all duration-200 translate-y-2 opacity-0 pointer-events-auto max-w-sm shadow-lg`;
             toast.innerHTML = `<span>${message}</span>`;
             container.appendChild(toast);
             requestAnimationFrame(() => toast.classList.remove('translate-y-2', 'opacity-0'));
             setTimeout(() => {
                 toast.classList.add('opacity-0', 'translate-y-2');
-                setTimeout(() => toast.remove(), 300);
+                setTimeout(() => toast.remove(), 250);
             }, 3000);
         }
 
-        window.addEventListener('resize', drawECGCanvas);
         window.addEventListener('DOMContentLoaded', () => {
-            setupCanvasHover();
             processECGPipeline();
         });
     </script>
