@@ -91,12 +91,18 @@
                     <label for="ecg-voltage-input" class="font-mono text-xs uppercase tracking-wider text-stone-600">
                         Input Sampel Angka
                     </label>
-                    <button type="button" onclick="applyECGPreset('baseline')" class="font-mono text-xs text-cobalt underline underline-offset-4 hover:text-coal transition-colors">
-                        Isi Sampel Bawaan
-                    </button>
+                    <div class="flex items-center gap-4">
+                        <label class="font-mono text-xs text-cobalt underline underline-offset-4 hover:text-coal transition-colors cursor-pointer">
+                            Muat File (.txt / .csv)
+                            <input type="file" id="ecg-file-input" accept=".txt,.csv,text/plain,text/csv" class="hidden" onchange="loadECGFile(event)">
+                        </label>
+                        <button type="button" onclick="applyECGPreset('baseline')" class="font-mono text-xs text-cobalt underline underline-offset-4 hover:text-coal transition-colors">
+                            Isi Sampel Bawaan
+                        </button>
+                    </div>
                 </div>
 
-                <textarea id="ecg-voltage-input" rows="2" class="w-full py-2.5 px-3.5 bg-canvas/80 border-b-2 border-coal/30 focus:border-cobalt focus:outline-none font-mono text-xs sm:text-sm text-coal" placeholder="1.20, 1.20, 1.21, 1.20...">1.20, 1.20, 1.21, 1.20, 1.20, 1.20, 1.20, 1.25, 1.45, 1.20, 1.20, 1.20, 1.21, 1.20, 1.20</textarea>
+                <textarea id="ecg-voltage-input" rows="2" oninput="bigInput = null" class="w-full py-2.5 px-3.5 bg-canvas/80 border-b-2 border-coal/30 focus:border-cobalt focus:outline-none font-mono text-xs sm:text-sm text-coal" placeholder="1.20, 1.20, 1.21, 1.20...">1.20, 1.20, 1.21, 1.20, 1.20, 1.20, 1.20, 1.25, 1.45, 1.20, 1.20, 1.20, 1.21, 1.20, 1.20</textarea>
 
                 <div class="flex flex-wrap items-center justify-between gap-3 pt-1">
                     <p class="font-mono text-xs text-stone-600">
@@ -266,6 +272,12 @@
     
     <script>
       
+        // Batas jumlah elemen yang digambar ke layar. Perhitungan tetap memakai SEMUA data;
+        // hanya tampilannya yang dipotong agar browser tidak hang pada data besar (mis. 1 jam @ 500 Hz).
+        const MAX_RENDER = 400;
+        const MAX_BIT_CHARS = 4000;
+        let bigInput = null; // teks file besar (tidak dimasukkan ke textarea)
+
         class HuffmanNode {
             constructor(symbol, freq, left = null, right = null) {
                 this.id = 'node_' + Math.random().toString(36).substr(2, 9);
@@ -375,7 +387,8 @@
         }
 
         function processECGPipeline() {
-            const rawStr = document.getElementById('ecg-voltage-input').value;
+            const t0 = performance.now();
+            const rawStr = bigInput !== null ? bigInput : document.getElementById('ecg-voltage-input').value;
             const samples = parseVoltageInput(rawStr);
 
             if (samples.length < 2) {
@@ -408,6 +421,11 @@
             renderDictionaryTable();
             renderBitstreamDisplay();
             renderHuffmanTreeSVG();
+
+            if (samples.length > MAX_RENDER) {
+                const ms = Math.round(performance.now() - t0);
+                showToast(`${samples.length.toLocaleString('id-ID')} sampel diproses dalam ${ms} ms. Tampilan hanya memuat sebagian; perhitungan memakai semua data.`, "info");
+            }
         }
 
         function resetVerificationUI() {
@@ -457,14 +475,23 @@
             document.getElementById('delta-anchor-val').textContent = `${pipelineState.anchorValue.toFixed(2)} mV`;
             container.innerHTML = '';
 
-            pipelineState.deltas.forEach((sym, idx) => {
+            const total = pipelineState.deltas.length;
+            const shown = Math.min(total, MAX_RENDER);
+            for (let idx = 0; idx < shown; idx++) {
+                const sym = pipelineState.deltas[idx];
                 const badgeStyle = getDeltaBadgeStyle(sym);
                 const chip = document.createElement('span');
                 chip.className = `px-2.5 py-1 rounded-full border font-mono text-xs font-semibold ${badgeStyle}`;
                 chip.title = `Sampel #${idx + 1} → #${idx + 2}: Selisih ${sym} mV`;
                 chip.textContent = sym;
                 container.appendChild(chip);
-            });
+            }
+            if (total > shown) {
+                const note = document.createElement('span');
+                note.className = 'px-2.5 py-1 font-mono text-xs text-stone-500';
+                note.textContent = `… ${shown.toLocaleString('id-ID')} dari ${total.toLocaleString('id-ID')} selisih ditampilkan`;
+                container.appendChild(note);
+            }
         }
 
         function renderDictionaryTable() {
@@ -517,10 +544,21 @@
             const anchorBin16 = scaledInt.toString(2).padStart(16, '0');
             anchorHeaderEl.textContent = `${anchorBin16} (${pipelineState.anchorValue.toFixed(2)} mV)`;
 
+            const totalSyms = pipelineState.encodedArray.length;
+            const totalBits = pipelineState.encodedRaw.length;
             if (isSpaced) {
-                displayEl.innerHTML = pipelineState.encodedArray
+                const shown = Math.min(totalSyms, MAX_RENDER);
+                let html = pipelineState.encodedArray
+                    .slice(0, shown)
                     .map((bits, idx) => `<span title="Delta[${idx}]: ${pipelineState.deltas[idx]}" class="inline-block px-2 py-0.5 mr-1 mb-1 rounded-full bg-canvas text-coal border border-coal/20 hover:border-cobalt">${bits}</span>`)
                     .join('');
+                if (totalSyms > shown) {
+                    html += `<span class="text-stone-500">… ${shown.toLocaleString('id-ID')} dari ${totalSyms.toLocaleString('id-ID')} simbol ditampilkan (total ${totalBits.toLocaleString('id-ID')} bit)</span>`;
+                }
+                displayEl.innerHTML = html;
+            } else if (totalBits > MAX_BIT_CHARS) {
+                displayEl.textContent = pipelineState.encodedRaw.slice(0, MAX_BIT_CHARS) +
+                    ` … (${MAX_BIT_CHARS.toLocaleString('id-ID')} dari ${totalBits.toLocaleString('id-ID')} bit ditampilkan; tombol Salin tetap menyalin semuanya)`;
             } else {
                 displayEl.textContent = pipelineState.encodedRaw;
             }
@@ -803,9 +841,13 @@
             const checkEl = document.getElementById('decompression-sample-check');
 
             restoredEl.className = "font-mono text-xs text-coal min-h-[76px] max-h-36 overflow-y-auto leading-relaxed";
+            const shownRestored = Math.min(reconstructed.length, MAX_RENDER);
             restoredEl.innerHTML = `<div class="flex flex-wrap gap-1.5">${reconstructed
+                .slice(0, shownRestored)
                 .map(v => `<span class="px-2 py-0.5 rounded-full bg-canvas border border-coal/25 text-coal font-semibold">${v.toFixed(2)}</span>`)
-                .join('')}</div>`;
+                .join('')}${reconstructed.length > shownRestored
+                    ? `<span class="text-stone-500">… ${shownRestored.toLocaleString('id-ID')} dari ${reconstructed.length.toLocaleString('id-ID')} sampel ditampilkan</span>`
+                    : ''}</div>`;
 
             checkEl.textContent = `${reconstructed.length}/${pipelineState.rawSamples.length} Sampel Pulih`;
             checkEl.className = "font-mono text-[11px] font-bold text-coal";
@@ -827,11 +869,35 @@
 
         function applyECGPreset(type) {
             const inputEl = document.getElementById('ecg-voltage-input');
+            bigInput = null;
             if (type === 'baseline') {
                 inputEl.value = "1.20, 1.20, 1.21, 1.20, 1.20, 1.20, 1.20, 1.25, 1.45, 1.20, 1.20, 1.20, 1.21, 1.20, 1.20";
             }
             processECGPipeline();
             showToast("Sampel bawaan dimuat & diproses.", "info");
+        }
+
+        function loadECGFile(event) {
+            const file = event.target.files && event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = () => {
+                const text = String(reader.result);
+                const inputEl = document.getElementById('ecg-voltage-input');
+                if (text.length > 200000) {
+                    // File besar: simpan di memori, jangan dimasukkan ke textarea (bikin browser lambat)
+                    bigInput = text;
+                    inputEl.value = `[File dimuat: ${file.name}. Klik "Hitung Delta & Huffman" untuk memproses. Mengetik di sini membatalkan file.]`;
+                } else {
+                    bigInput = null;
+                    inputEl.value = text;
+                }
+                showToast(`File ${file.name} dimuat (${(file.size / 1024).toFixed(0)} KB). Memproses...`, "info");
+                setTimeout(processECGPipeline, 50);
+            };
+            reader.onerror = () => showToast("Gagal membaca file.", "warning");
+            reader.readAsText(file);
+            event.target.value = '';
         }
 
         function copyBitstream() {
