@@ -4,9 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Delta–Huffman Codec — Editorial Flow</title>
-    <!-- Tailwind CSS CDN Only (Zero Custom CSS) -->
+
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Google Fonts: Fraunces, Plus Jakarta Sans & IBM Plex Mono -->
+
     <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=IBM+Plex+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script>
         tailwind.config = {
@@ -31,13 +31,16 @@
 </head>
 <body class="bg-linen text-coal font-sans antialiased selection:bg-cobalt selection:text-white min-h-screen flex flex-col">
 
-    <!-- Toast Notification Container (Pure Tailwind) -->
+
     <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
 
-    <!-- Flowing Editorial Masthead (No Sticky Box) -->
+
     <header class="max-w-6xl w-full mx-auto px-4 sm:px-8 pt-8 pb-6 border-b border-coal/20">
         <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
             <div class="space-y-1.5">
+                <p class="font-mono text-[11px] uppercase tracking-[0.22em] text-cobalt font-semibold">
+                    Alur Kompresi Lossless &bull; Tie-Breaker Nilai Terkecil
+                </p>
                 <h1 class="font-display text-3xl sm:text-5xl font-bold tracking-tight text-coal">
                     Delta &amp; Huffman
                 </h1>
@@ -47,7 +50,7 @@
             </p>
         </div>
 
-        <!-- Inline Typographic Strip (No Cards, No Dividers-as-Boxes) -->
+   
         <div class="mt-6 pt-5 border-t border-dashed border-coal/20 flex flex-wrap items-baseline gap-x-8 gap-y-3 font-mono">
             <div>
                 <span class="text-[11px] uppercase tracking-wider text-stone-500 block">Mentah (16-bit)</span>
@@ -68,10 +71,10 @@
         </div>
     </header>
 
-    <!-- Main Flowing Timeline Layout (No Heavy Cards) -->
+
     <main class="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-8 py-8 space-y-12">
 
-        <!-- STEP 1: Flowing Input to Delta Ribbon -->
+
         <section class="relative pl-6 sm:pl-9 border-l-2 border-cobalt/40 space-y-5">
             <span class="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-cobalt ring-4 ring-linen"></span>
 
@@ -117,7 +120,7 @@
             </div>
         </section>
 
-        <!-- STEP 2: Open Editorial Split for Codebook & Tree -->
+   
         <section class="relative pl-6 sm:pl-9 border-l-2 border-cobalt/40 space-y-6">
             <span class="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-linen border-2 border-cobalt ring-4 ring-linen"></span>
 
@@ -132,7 +135,7 @@
             </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-                <!-- Left: Clean Typographic Frequency Table (5 cols) -->
+       
                 <div class="lg:col-span-5 overflow-x-auto">
                     <table class="w-full text-left border-collapse font-mono text-xs">
                         <thead>
@@ -149,7 +152,7 @@
                     </table>
                 </div>
 
-                <!-- Right: Unboxed Tree Canvas Area (7 cols) -->
+              
                 <div class="lg:col-span-7 relative">
                     <div class="flex items-center justify-between font-mono text-[11px] text-stone-500 pb-2 border-b border-coal/15">
                         <span>Pohon Biner (Kiri = 0 &bull; Kanan = 1)</span>
@@ -165,7 +168,7 @@
             </div>
         </section>
 
-        <!-- STEP 3: Bitstream Stream & Lossless Reconstruction -->
+    
         <section class="relative pl-6 sm:pl-9 border-l-2 border-rust/50 space-y-6">
             <span class="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-rust ring-4 ring-linen"></span>
 
@@ -175,7 +178,7 @@
             </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-                <!-- Left: Bitstream Flow (6 cols) -->
+
                 <div class="lg:col-span-6 space-y-3">
                     <div class="flex flex-wrap items-center justify-between gap-2">
                         <span class="font-mono text-xs uppercase tracking-wider text-stone-600">
@@ -198,10 +201,16 @@
                             <span id="anchor-binary-header">0000000001111000 (1.20 mV)</span>
                         </div>
                         <div id="bitstream-display" class="leading-relaxed break-all max-h-40 overflow-y-auto text-coal"></div>
+                        <div class="pt-2 border-t border-dashed border-coal/15 flex flex-wrap items-center justify-between gap-2 text-[11px] text-stone-500">
+                            <span>Simpan paket bit: <strong class="text-coal">.bin</strong></span>
+                            <button type="button" onclick="downloadCompressedBin()" class="px-2.5 py-1 rounded-full border border-coal/25 hover:border-cobalt hover:text-cobalt uppercase tracking-wider transition-colors">
+                                Unduh .BIN
+                            </button>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Right: Decompression & Check (6 cols) -->
+               
                 <div class="lg:col-span-6 space-y-3">
                     <div class="flex items-center justify-between">
                         <span class="font-mono text-xs uppercase tracking-wider text-stone-600">
@@ -213,6 +222,18 @@
                     <div class="pt-2 border-t border-coal/15 space-y-4">
                         <div id="restored-ecg-text" class="font-mono text-xs text-stone-500 min-h-[76px] max-h-36 overflow-y-auto leading-relaxed">
                             Klik tombol dekompresi untuk menelusuri bit menjadi Delta lalu menjumlahkannya dari nilai awal.
+                        </div>
+
+                        <div class="flex flex-wrap items-center justify-between gap-2 text-[11px] font-mono text-stone-500 pt-1">
+                            <span>Simpan angka asli: <strong class="text-coal">.csv</strong> / <strong class="text-coal">.json</strong></span>
+                            <div class="flex items-center gap-2">
+                                <button type="button" onclick="downloadRestoredFile('csv')" class="px-2.5 py-1 rounded-full border border-coal/25 hover:border-cobalt hover:text-cobalt uppercase tracking-wider transition-colors">
+                                    Unduh .CSV
+                                </button>
+                                <button type="button" onclick="downloadRestoredFile('json')" class="px-2.5 py-1 rounded-full border border-coal/25 hover:border-cobalt hover:text-cobalt uppercase tracking-wider transition-colors">
+                                    Unduh .JSON
+                                </button>
+                            </div>
                         </div>
 
                         <div class="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-dashed border-coal/20">
@@ -236,17 +257,15 @@
         </section>
     </main>
 
-    <!-- Minimalist Footer -->
+
     <footer class="max-w-6xl w-full mx-auto px-4 sm:px-8 py-6 border-t border-coal/15 flex flex-col sm:flex-row items-center justify-between gap-2 font-mono text-[11px] text-stone-500">
-        <span>Delta Encoding &rarr; Huffman Coding &rarr; Rekonstruksi</span>
-        <span>Tailwind CSS Only</span>
+        <span>Delta Encoding &rarr; Huffman Coding</span>
+      
     </footer>
 
-    <!-- Application Logic -->
+    
     <script>
-        // ==========================================
-        // 1. DATA STRUCTURES: HUFFMAN NODE & STATE
-        // ==========================================
+      
         class HuffmanNode {
             constructor(symbol, freq, left = null, right = null) {
                 this.id = 'node_' + Math.random().toString(36).substr(2, 9);
@@ -282,9 +301,7 @@
             reconstructedSamples: null
         };
 
-        // ==========================================
-        // 2. DELTA ENCODING + HUFFMAN PIPELINE
-        // ==========================================
+
         function parseVoltageInput(rawStr) {
             return rawStr
                 .split(/[\s,;]+/)
@@ -410,9 +427,7 @@
             restoredEl.textContent = "Klik tombol dekompresi untuk menelusuri bit menjadi Delta lalu menjumlahkannya dari nilai awal.";
         }
 
-        // ==========================================
-        // 3. UI METRICS & DELTA TOKENS RENDERING
-        // ==========================================
+    
         function updateMetricsCards() {
             const n = pipelineState.rawSamples.length;
             const rawBits = n * 16;
@@ -588,7 +603,7 @@
 
             const svgNS = "http://www.w3.org/2000/svg";
 
-            // Edges
+         
             edgesList.forEach(edge => {
                 const gEdge = document.createElementNS(svgNS, "g");
                 const line = document.createElementNS(svgNS, "line");
@@ -744,9 +759,7 @@
             document.getElementById('tree-hover-badge').classList.add('hidden');
         }
 
-        // ==========================================
-        // 5. LOSSLESS RECONSTRUCTION & VERIFICATION
-        // ==========================================
+    
         function verifyHospitalReconstruction() {
             if (!pipelineState.root || !pipelineState.encodedRaw) {
                 showToast("Belum ada paket bit terkompresi untuk dikembalikan.", "warning");
@@ -812,9 +825,6 @@
             }
         }
 
-        // ==========================================
-        // 6. PRESETS & CLIPBOARD UTILITIES
-        // ==========================================
         function applyECGPreset(type) {
             const inputEl = document.getElementById('ecg-voltage-input');
             if (type === 'baseline') {
@@ -833,6 +843,65 @@
             document.execCommand("copy");
             document.body.removeChild(tempInput);
             showToast("Deretan bit biner Huffman disalin ke clipboard.", "success");
+        }
+
+        function triggerFileDownload(blob, filename) {
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.href = url;
+            link.download = filename;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
+        }
+
+        function downloadCompressedBin() {
+            if (!pipelineState.encodedRaw) {
+                showToast("Belum ada data bit untuk diunduh.", "warning");
+                return;
+            }
+
+   
+            const scaledInt = Math.max(0, Math.round(pipelineState.anchorValue * 100));
+            const anchorBin16 = scaledInt.toString(2).padStart(16, '0');
+            const fullBitString = anchorBin16 + pipelineState.encodedRaw;
+            const byteCount = Math.ceil(fullBitString.length / 8);
+            const bytes = new Uint8Array(byteCount);
+
+            for (let i = 0; i < byteCount; i++) {
+                const chunk = fullBitString.slice(i * 8, (i + 1) * 8).padEnd(8, '0');
+                bytes[i] = parseInt(chunk, 2);
+            }
+
+            const blob = new Blob([bytes], { type: "application/octet-stream" });
+            triggerFileDownload(blob, "delta-huffman-paket.bin");
+            showToast(`File delta-huffman-paket.bin (${byteCount} byte) diunduh.`, "success");
+        }
+
+        function downloadRestoredFile(format) {
+            const samples = pipelineState.reconstructedSamples;
+            if (!samples || samples.length === 0) {
+                showToast("Klik 'Kembalikan Data' terlebih dahulu sebelum mengunduh angka asli.", "warning");
+                return;
+            }
+
+            if (format === "csv") {
+                const rows = ["index,nilai"];
+                samples.forEach((val, idx) => rows.push(`${idx},${val.toFixed(2)}`));
+                const blob = new Blob([rows.join("\n")], { type: "text/csv;charset=utf-8;" });
+                triggerFileDownload(blob, "data-angka-asli.csv");
+                showToast("File data-angka-asli.csv berhasil diunduh.", "success");
+            } else if (format === "json") {
+                const payload = {
+                    anchor: pipelineState.anchorValue,
+                    total_sampel: samples.length,
+                    data_asli: samples.map(v => Number(v.toFixed(2)))
+                };
+                const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json;charset=utf-8;" });
+                triggerFileDownload(blob, "data-angka-asli.json");
+                showToast("File data-angka-asli.json berhasil diunduh.", "success");
+            }
         }
 
         function showToast(message, type = "info") {
